@@ -797,52 +797,11 @@ namespace Azure.AI.TextAnalytics.Tests
 
         [RecordedTest]
         [RetryOnInternalServerError]
-        [ServiceVersion(Min = TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview)]
-        public async Task AnalyzeOperationAnalyzeHealthcareEntitiesWithFhirVersion()
-        {
-            TextAnalyticsClient client = GetClient();
-
-            List<string> documents = new()
-            {
-                "Prescribed 100mg ibuprofen to Jane Doe, taken twice daily.",
-            };
-
-            TextAnalyticsActions batchActions = new()
-            {
-                AnalyzeHealthcareEntitiesActions = new[]
-                {
-                    new AnalyzeHealthcareEntitiesAction(new AnalyzeHealthcareEntitiesOptions()
-                    {
-                        FhirVersion = FhirVersion.V4_0_1,
-                        DocumentType = HealthcareDocumentType.DischargeSummary
-                    }),
-                },
-                DisplayName = "AnalyzeOperationAnalyzeHealthcareEntitiesWithFhirVersion",
-            };
-
-            AnalyzeActionsOperation operation = await client.StartAnalyzeActionsAsync(documents, batchActions);
-            await operation.WaitForCompletionAsync();
-
-            //Take the first page
-            AnalyzeActionsResult resultCollection = operation.Value.ToEnumerableAsync().Result.FirstOrDefault();
-
-            IReadOnlyCollection<AnalyzeHealthcareEntitiesActionResult> analyzeHealthcareEntitiesActionResults = resultCollection.AnalyzeHealthcareEntitiesResults;
-            Assert.IsNotNull(analyzeHealthcareEntitiesActionResults);
-
-            AnalyzeHealthcareEntitiesResultCollection analyzeHealthcareEntitiesDocumentsResults = analyzeHealthcareEntitiesActionResults.FirstOrDefault().DocumentsResults;
-            Assert.AreEqual(1, analyzeHealthcareEntitiesDocumentsResults.Count);
-            Assert.IsNotNull(analyzeHealthcareEntitiesDocumentsResults[0].FhirBundle);
-        }
-
-        [RecordedTest]
-        [RetryOnInternalServerError]
         [ServiceVersion(Max = TextAnalyticsClientOptions.ServiceVersion.V3_1)]
         public void AnalyzeOperationAnalyzeHealthcareEntitiesActionNotSupported()
         {
             TestDiagnostics = false;
-
             TextAnalyticsClient client = GetClient();
-
             TextAnalyticsActions batchActions = new()
             {
                 AnalyzeHealthcareEntitiesActions = new[]
@@ -853,6 +812,44 @@ namespace Azure.AI.TextAnalytics.Tests
 
             NotSupportedException ex = Assert.ThrowsAsync<NotSupportedException>(async () => await client.StartAnalyzeActionsAsync(batchDocuments, batchActions));
             Assert.AreEqual("AnalyzeHealthcareEntitiesAction is not available in API version v3.1. Use service API version 2022-05-01 or newer.", ex.Message);
+        }
+
+        [RecordedTest]
+        [RetryOnInternalServerError]
+        [ServiceVersion(Max = TextAnalyticsClientOptions.ServiceVersion.V2022_05_01)]
+        public void AnalyzeOperationExtractSummaryActionNotSupported()
+        {
+            TestDiagnostics = false;
+            TextAnalyticsClient client = GetClient();
+            TextAnalyticsActions batchActions = new()
+            {
+                ExtractSummaryActions = new[]
+                {
+                    new ExtractSummaryAction(),
+                },
+            };
+
+            NotSupportedException ex = Assert.ThrowsAsync<NotSupportedException>(async () => await client.StartAnalyzeActionsAsync(batchDocuments, batchActions));
+            Assert.That(ex.Message.EndsWith("Use service API version 2023-04-01 or newer."));
+        }
+
+        [RecordedTest]
+        [RetryOnInternalServerError]
+        [ServiceVersion(Max = TextAnalyticsClientOptions.ServiceVersion.V2022_05_01)]
+        public void AnalyzeOperationAbstractSummaryActionNotSupported()
+        {
+            TestDiagnostics = false;
+            TextAnalyticsClient client = GetClient();
+            TextAnalyticsActions batchActions = new()
+            {
+                AbstractSummaryActions = new[]
+                {
+                    new AbstractSummaryAction(),
+                },
+            };
+
+            NotSupportedException ex = Assert.ThrowsAsync<NotSupportedException>(async () => await client.StartAnalyzeActionsAsync(batchDocuments, batchActions));
+            Assert.That(ex.Message.EndsWith("Use service API version 2023-04-01 or newer."));
         }
 
         private void ValidateOperationProperties(AnalyzeActionsOperation operation)

@@ -1859,7 +1859,12 @@ namespace Azure.AI.TextAnalytics.ServiceClients
             // Validate supported version.
             if (actions.ExtractSummaryActions != null && actions.ExtractSummaryActions.Count > 0)
             {
-                Validation.SupportsOperation(nameof(ExtractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview, ServiceVersion);
+                Validation.SupportsOperation(nameof(ExtractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2023_04_01, ServiceVersion);
+            }
+
+            if (actions.AbstractSummaryActions != null && actions.AbstractSummaryActions.Count > 0)
+            {
+                Validation.SupportsOperation(nameof(AbstractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2023_04_01, ServiceVersion);
             }
 
             return analyzeTasks;

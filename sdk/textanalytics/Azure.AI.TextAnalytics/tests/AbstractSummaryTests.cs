@@ -11,7 +11,7 @@ using NUnit.Framework;
 
 namespace Azure.AI.TextAnalytics.Tests
 {
-    [ServiceVersion(Min = TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview)]
+    [ServiceVersion(Min = TextAnalyticsClientOptions.ServiceVersion.V2023_04_01)]
     public class AbstractSummaryTests : TextAnalyticsClientLiveTestBase
     {
         public AbstractSummaryTests(bool isAsync, TextAnalyticsClientOptions.ServiceVersion serviceVersion)
@@ -213,26 +213,6 @@ namespace Azure.AI.TextAnalytics.Tests
 
         [RecordedTest]
         [RetryOnInternalServerError]
-        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/32614")]
-        public async Task AbstractSummaryBatchConvenienceWithAutoDetectedLanguageTest()
-        {
-            TextAnalyticsClient client = GetClient();
-
-            AbstractSummaryOperation operation = await client.StartAbstractSummaryAsync(s_batchConvenienceDocuments, "en");
-            await operation.WaitForCompletionAsync();
-            ValidateOperationProperties(operation);
-
-            List<AbstractSummaryResultCollection> resultInPages = operation.Value.ToEnumerableAsync().Result;
-            Assert.AreEqual(1, resultInPages.Count);
-
-            // Take the first page.
-            AbstractSummaryResultCollection resultCollection = resultInPages.FirstOrDefault();
-            ValidateSummaryBatchResult(resultCollection, isLanguageAutoDetected: true);
-        }
-
-        [RecordedTest]
-        [RetryOnInternalServerError]
-        [ServiceVersion(Min = TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview)]
         public async Task AnalyzeOperationAbstractSummary()
         {
             TextAnalyticsClient client = GetClient();
@@ -272,31 +252,6 @@ namespace Azure.AI.TextAnalytics.Tests
             Assert.That(ex.Message.EndsWith("Use service API version 2022-10-01-preview or newer."));
         }
 
-        [RecordedTest]
-        [RetryOnInternalServerError]
-        [Ignore("https://github.com/Azure/azure-sdk-for-net/issues/32614")]
-        public async Task AnalyzeOperationAbstractSummaryWithAutoDetectedLanguageTest()
-        {
-            TextAnalyticsClient client = GetClient();
-            List<string> documents = s_batchConvenienceDocuments;
-            TextAnalyticsActions actions = new()
-            {
-                AbstractSummaryActions = new List<AbstractSummaryAction>() { new AbstractSummaryAction() },
-                DisplayName = "AbstractSummaryWithAutoDetectedLanguage",
-            };
-
-            AnalyzeActionsOperation operation = await client.StartAnalyzeActionsAsync(documents, actions, "auto");
-            await operation.WaitForCompletionAsync();
-
-            // Take the first page.
-            AnalyzeActionsResult resultCollection = operation.Value.ToEnumerableAsync().Result.FirstOrDefault();
-            IReadOnlyCollection<AbstractSummaryActionResult> actionResults = resultCollection.AbstractSummaryResults;
-            Assert.IsNotNull(actionResults);
-
-            AbstractSummaryResultCollection results = actionResults.FirstOrDefault().DocumentsResults;
-            ValidateSummaryBatchResult(results, isLanguageAutoDetected: true);
-        }
-
         private void ValidateOperationProperties(AbstractSummaryOperation operation)
         {
             Assert.AreNotEqual(new DateTimeOffset(), operation.CreatedOn);
@@ -311,8 +266,7 @@ namespace Azure.AI.TextAnalytics.Tests
 
         private void ValidateSummaryBatchResult(
             AbstractSummaryResultCollection results,
-            bool includeStatistics = default,
-            bool isLanguageAutoDetected = default)
+            bool includeStatistics = default)
         {
             Assert.That(results.ModelVersion, Is.Not.Null.And.Not.Empty);
 
@@ -343,21 +297,6 @@ namespace Azure.AI.TextAnalytics.Tests
                 {
                     Assert.AreEqual(0, result.Statistics.CharacterCount);
                     Assert.AreEqual(0, result.Statistics.TransactionCount);
-                }
-
-                if (isLanguageAutoDetected)
-                {
-                    Assert.IsNotNull(result.DetectedLanguage);
-                    Assert.That(result.DetectedLanguage.Value.Name, Is.Not.Null.And.Not.Empty);
-                    Assert.That(result.DetectedLanguage.Value.Iso6391Name, Is.Not.Null.And.Not.Empty);
-                    Assert.GreaterOrEqual(result.DetectedLanguage.Value.ConfidenceScore, 0.0);
-                    Assert.LessOrEqual(result.DetectedLanguage.Value.ConfidenceScore, 1.0);
-                    Assert.IsNotNull(result.DetectedLanguage.Value.Warnings);
-                    Assert.IsEmpty(result.DetectedLanguage.Value.Warnings);
-                }
-                else
-                {
-                    Assert.IsNull(result.DetectedLanguage);
                 }
 
                 Assert.IsNotNull(result.Warnings);

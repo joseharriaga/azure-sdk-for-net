@@ -1545,11 +1545,11 @@ namespace Azure.AI.TextAnalytics.ServiceClients
             }
             if (actions.ExtractSummaryActions != null && actions.ExtractSummaryActions.Count > 0)
             {
-                throw Validation.NotSupported(nameof(ExtractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview, ServiceVersion);
+                throw Validation.NotSupported(nameof(ExtractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2023_04_01, ServiceVersion);
             }
             if (actions.AbstractSummaryActions != null && actions.AbstractSummaryActions.Count > 0)
             {
-                throw Validation.NotSupported(nameof(AbstractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2022_10_01_Preview, ServiceVersion);
+                throw Validation.NotSupported(nameof(AbstractSummaryAction), TextAnalyticsClientOptions.ServiceVersion.V2023_04_01, ServiceVersion);
             }
             return tasks;
         }
